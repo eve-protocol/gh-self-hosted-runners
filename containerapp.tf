@@ -74,6 +74,11 @@ resource "azurerm_container_app_job" "main" {
   name                         = "${local.resource_prefix}-aca-job"
   replica_timeout_in_seconds   = 1800
   resource_group_name          = azurerm_resource_group.main.name
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.main.id]
+  }
   event_trigger_config {
     scale {
       rules {
@@ -100,7 +105,7 @@ resource "azurerm_container_app_job" "main" {
   }
   registry {
     server   = "shfrc1pprdcregcrshrd001.azurecr.io"
-    identity = azurerm_user_assigned_identity.main.principal_id
+    identity = azurerm_user_assigned_identity.main.id
   }
   template {
     container {
