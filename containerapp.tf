@@ -73,8 +73,8 @@ resource "azurerm_container_app_job" "main" {
   location                     = azurerm_resource_group.main.location
   name                         = "${local.resource_prefix}-aca-job"
   replica_timeout_in_seconds   = 1800
-  
-  resource_group_name          = azurerm_resource_group.main.name
+
+  resource_group_name = azurerm_resource_group.main.name
 
   identity {
     type         = "UserAssigned"
@@ -94,6 +94,7 @@ resource "azurerm_container_app_job" "main" {
           runnerScope    = "org"
           applicationID  = var.github_app_id
           installationID = var.github_app_installation_id
+          labels         = "container-apps"
         }
       }
     }
@@ -145,6 +146,10 @@ resource "azurerm_container_app_job" "main" {
       env {
         name  = "RUNNER_NAME_PREFIX"
         value = "gh-aca"
+      }
+      env {
+        name        = "APP_PRIVATE_KEY"
+        secret_name = local.secret_name
       }
     }
   }
