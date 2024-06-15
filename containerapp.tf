@@ -46,11 +46,18 @@ resource "random_string" "keyvault" {
 }
 
 resource "azurerm_key_vault" "main" {
-  location            = azurerm_resource_group.main.location
-  name                = "${replace(local.resource_prefix, "-", "")}${random_string.keyvault.result}"
-  resource_group_name = azurerm_resource_group.main.name
-  sku_name            = "standard"
-  tenant_id           = data.azuread_client_config.current.tenant_id
+  location                  = azurerm_resource_group.main.location
+  name                      = "${replace(local.resource_prefix, "-", "")}${random_string.keyvault.result}"
+  resource_group_name       = azurerm_resource_group.main.name
+  sku_name                  = "standard"
+  tenant_id                 = data.azuread_client_config.current.tenant_id
+  enable_rbac_authorization = true
+  network_acls {
+    bypass                     = "AzureServices"
+    default_action             = "Deny"
+    ip_rules                   = ["${chomp(data.http.myip.response_body)}/32"]
+    virtual_network_subnet_ids = [azurerm_subnet.aca.id]
+  }
 
 }
 
