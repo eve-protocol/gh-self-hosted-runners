@@ -26,6 +26,13 @@ resource "azurerm_role_assignment" "key_vault" {
 
 }
 
+resource "azurerm_role_assignment" "current" {
+  principal_id         = data.azuread_client_config.current.object_id
+  scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Secrets Officer"
+
+}
+
 resource "azurerm_role_assignment" "acr" {
   principal_id         = azurerm_user_assigned_identity.main.principal_id
   scope                = var.acr_resource_id

@@ -13,7 +13,14 @@ resource "azurerm_subnet" "aca" {
   name                 = "${local.resource_prefix}-aca-subnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
-
+  service_endpoints    = ["Microsoft.Keyvault"]
+  delegation {
+    name = "Microsoft.App/environments"
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
 }
 
 resource "azurerm_nat_gateway" "aca" {
