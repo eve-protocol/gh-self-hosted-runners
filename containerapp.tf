@@ -26,6 +26,13 @@ resource "azurerm_role_assignment" "key_vault" {
 
 }
 
+resource "azurerm_role_assignment" "current" {
+  principal_id         = data.azuread_client_config.current.object_id
+  scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Secrets Officer"
+
+}
+
 resource "azurerm_role_assignment" "acr" {
   principal_id         = azurerm_user_assigned_identity.main.principal_id
   scope                = var.acr_resource_id
@@ -39,11 +46,18 @@ resource "random_string" "keyvault" {
 }
 
 resource "azurerm_key_vault" "main" {
-  location            = azurerm_resource_group.main.location
-  name                = "${replace(local.resource_prefix, "-", "")}${random_string.keyvault.result}"
-  resource_group_name = azurerm_resource_group.main.name
-  sku_name            = "standard"
-  tenant_id           = data.azuread_client_config.current.tenant_id
+  location                  = azurerm_resource_group.main.location
+  name                      = "${replace(local.resource_prefix, "-", "")}${random_string.keyvault.result}"
+  resource_group_name       = azurerm_resource_group.main.name
+  sku_name                  = "standard"
+  tenant_id                 = data.azuread_client_config.current.tenant_id
+  enable_rbac_authorization = true
+  network_acls {
+    bypass                     = "AzureServices"
+    default_action             = "Deny"
+    ip_rules                   = ["${chomp(data.http.myip.response_body)}/32"]
+    virtual_network_subnet_ids = [azurerm_subnet.aca.id]
+  }
 
 }
 
@@ -59,7 +73,13 @@ resource "azurerm_container_app_job" "main" {
   location                     = azurerm_resource_group.main.location
   name                         = "${local.resource_prefix}-aca-job"
   replica_timeout_in_seconds   = 1800
-  resource_group_name          = azurerm_resource_group.main.name
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.main.id]
+  }
   event_trigger_config {
     scale {
       rules {
@@ -70,10 +90,11 @@ resource "azurerm_container_app_job" "main" {
           secret_name       = local.secret_name
         }
         metadata = {
-          owner          = var.github_organizaion
+          owner          = var.github_organization
           runnerScope    = "org"
           applicationID  = var.github_app_id
           installationID = var.github_app_installation_id
+          labels         = "container-apps"
         }
       }
     }
@@ -91,7 +112,7 @@ resource "azurerm_container_app_job" "main" {
   template {
     container {
       cpu    = "0.25"
-      image  = "shfrc1pprdcregcrshrd001.azurecr.io/shift-technology/sre-github-runner:dd730bf"
+      image  = "shfrc1pprdcregcrshrd001.azurecr.io/${var.github_organization}/sre-github-runner:dd730bf"
       memory = "0.5Gi"
       name   = "sre-github-runner"
       env {
@@ -108,7 +129,7 @@ resource "azurerm_container_app_job" "main" {
       }
       env {
         name  = "GH_OWNER"
-        value = var.github_organizaion
+        value = var.github_organization
       }
       env {
         name  = "APPSETTING_WEBSITE_SITE_NAME"
@@ -125,6 +146,10 @@ resource "azurerm_container_app_job" "main" {
       env {
         name  = "RUNNER_NAME_PREFIX"
         value = "gh-aca"
+      }
+      env {
+        name        = "APP_PRIVATE_KEY"
+        secret_name = local.secret_name
       }
     }
   }

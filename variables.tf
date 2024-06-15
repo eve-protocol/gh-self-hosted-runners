@@ -21,7 +21,7 @@ variable "github_app_installation_id" {
   sensitive   = true
 }
 
-variable "github_organizaion" {
+variable "github_organization" {
   description = "The GitHub organization"
   type        = string
 }

@@ -13,7 +13,14 @@ resource "azurerm_subnet" "aca" {
   name                 = "${local.resource_prefix}-aca-subnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
-
+  service_endpoints    = ["Microsoft.KeyVault"]
+  delegation {
+    name = "Microsoft.App/environments"
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 }
 
 resource "azurerm_nat_gateway" "aca" {
@@ -42,5 +49,18 @@ resource "azurerm_nat_gateway_public_ip_association" "natg" {
 resource "azurerm_subnet_nat_gateway_association" "natg" {
   nat_gateway_id = azurerm_nat_gateway.aca.id
   subnet_id      = azurerm_subnet.aca.id
+
+}
+
+resource "azurerm_network_security_group" "aca" {
+  location            = azurerm_resource_group.main.location
+  name                = "${local.resource_prefix}-aca-nsg"
+  resource_group_name = azurerm_resource_group.main.name
+
+}
+
+resource "azurerm_subnet_network_security_group_association" "aca" {
+  network_security_group_id = azurerm_network_security_group.aca.id
+  subnet_id                 = azurerm_subnet.aca.id
 
 }
