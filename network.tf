@@ -51,3 +51,16 @@ resource "azurerm_subnet_nat_gateway_association" "natg" {
   subnet_id      = azurerm_subnet.aca.id
 
 }
+
+resource "azurerm_network_security_group" "aca" {
+  location            = azurerm_resource_group.main.location
+  name                = "${local.resource_prefix}-aca-nsg"
+  resource_group_name = azurerm_resource_group.main.name
+
+}
+
+resource "azurerm_subnet_network_security_group_association" "aca" {
+  network_security_group_id = azurerm_network_security_group.aca.id
+  subnet_id                 = azurerm_subnet.aca.id
+
+}
