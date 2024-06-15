@@ -84,7 +84,7 @@ resource "azurerm_container_app_job" "main" {
           secret_name       = local.secret_name
         }
         metadata = {
-          owner          = var.github_organizaion
+          owner          = var.github_organization
           runnerScope    = "org"
           applicationID  = var.github_app_id
           installationID = var.github_app_installation_id
@@ -100,12 +100,12 @@ resource "azurerm_container_app_job" "main" {
   }
   registry {
     server   = "shfrc1pprdcregcrshrd001.azurecr.io"
-    identity = azurerm_user_assigned_identity.main.id
+    identity = azurerm_user_assigned_identity.main.principal_id
   }
   template {
     container {
       cpu    = "0.25"
-      image  = "shfrc1pprdcregcrshrd001.azurecr.io/shift-technology/sre-github-runner:dd730bf"
+      image  = "shfrc1pprdcregcrshrd001.azurecr.io/${var.github_organization}/sre-github-runner:dd730bf"
       memory = "0.5Gi"
       name   = "sre-github-runner"
       env {
@@ -122,7 +122,7 @@ resource "azurerm_container_app_job" "main" {
       }
       env {
         name  = "GH_OWNER"
-        value = var.github_organizaion
+        value = var.github_organization
       }
       env {
         name  = "APPSETTING_WEBSITE_SITE_NAME"
