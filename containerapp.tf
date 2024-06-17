@@ -106,13 +106,13 @@ resource "azurerm_container_app_job" "main" {
     value               = ""
   }
   registry {
-    server   = "shfrc1pprdcregcrshrd001.azurecr.io"
+    server   = var.container_registry_server
     identity = azurerm_user_assigned_identity.main.id
   }
   template {
     container {
       cpu    = "0.25"
-      image  = "shfrc1pprdcregcrshrd001.azurecr.io/${var.github_organization}/sre-github-runner:dd730bf"
+      image  = "${var.container_registry_server}/${var.github_organization}/sre-github-runner:dd730bf"
       memory = "0.5Gi"
       name   = "sre-github-runner"
       env {

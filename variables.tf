@@ -25,3 +25,8 @@ variable "github_organization" {
   description = "The GitHub organization"
   type        = string
 }
+
+variable "container_registry_server" {
+  description = "The Azure Container Registry server"
+  type        = string
+}
