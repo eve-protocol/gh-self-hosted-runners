@@ -66,6 +66,8 @@ resource "azurerm_key_vault_secret" "main" {
   name         = local.secret_name
   value        = var.github_app_key
 
+  depends_on = [azurerm_role_assignment.current]
+
 }
 
 resource "azurerm_container_app_job" "main" {
